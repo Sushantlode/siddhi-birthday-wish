@@ -89,31 +89,86 @@
   }
 
   let heroTimer = null;
+  let heroStarted = false;
+
+  function prepareHeroVideo(video) {
+    video.muted = true;
+    video.defaultMuted = true;
+    video.loop = true;
+    video.playsInline = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    if (video.preload !== "auto") video.preload = "auto";
+    try {
+      video.load();
+    } catch (_) {}
+  }
+
+  function playHeroVideo(video) {
+    return new Promise((resolve) => {
+      const start = () => {
+        const attempt = video.play();
+        if (attempt && typeof attempt.then === "function") {
+          attempt.then(resolve).catch(() => resolve());
+        } else {
+          resolve();
+        }
+      };
+
+      if (video.readyState >= 2) {
+        try {
+          video.currentTime = 0;
+        } catch (_) {}
+        start();
+        return;
+      }
+
+      const onReady = () => {
+        video.removeEventListener("loadeddata", onReady);
+        try {
+          video.currentTime = 0;
+        } catch (_) {}
+        start();
+      };
+      video.addEventListener("loadeddata", onReady, { once: true });
+      prepareHeroVideo(video);
+      // Fallback if loadeddata never fires
+      setTimeout(() => {
+        video.removeEventListener("loadeddata", onReady);
+        start();
+      }, 1200);
+    });
+  }
 
   function showHeroVideo(index) {
-    heroIndex = index;
+    if (!heroVideos.length) return;
+    heroIndex = ((index % heroVideos.length) + heroVideos.length) % heroVideos.length;
+
     heroVideos.forEach((video, i) => {
-      const active = i === index;
+      const active = i === heroIndex;
       video.classList.toggle("is-active", active);
-      video.loop = true;
-      if (active) {
-        video.currentTime = 0;
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
+      video.style.zIndex = active ? "2" : "1";
+      if (!active) video.pause();
     });
 
-    const current = heroVideos[index];
-    const hold = Number(current.dataset.hold) || 7000;
-    clearTimeout(heroTimer);
-    heroTimer = setTimeout(() => {
-      showHeroVideo((index + 1) % heroVideos.length);
-    }, hold);
+    const current = heroVideos[heroIndex];
+    const next = heroVideos[(heroIndex + 1) % heroVideos.length];
+    prepareHeroVideo(next);
+
+    playHeroVideo(current).finally(() => {
+      clearTimeout(heroTimer);
+      const hold = Number(current.dataset.hold) || 5000;
+      heroTimer = setTimeout(() => {
+        showHeroVideo(heroIndex + 1);
+      }, hold);
+    });
   }
 
   function startHero() {
-    if (!heroVideos.length) return;
+    if (!heroVideos.length || heroStarted) return;
+    heroStarted = true;
+    heroVideos.forEach(prepareHeroVideo);
     showHeroVideo(0);
   }
 
