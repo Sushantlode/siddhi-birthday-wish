@@ -94,7 +94,8 @@
   function prepareHeroVideo(video) {
     video.muted = true;
     video.defaultMuted = true;
-    video.loop = true;
+    video.loop = false;
+    video.removeAttribute("loop");
     video.playsInline = true;
     video.setAttribute("muted", "");
     video.setAttribute("playsinline", "");
@@ -133,12 +134,16 @@
       };
       video.addEventListener("loadeddata", onReady, { once: true });
       prepareHeroVideo(video);
-      // Fallback if loadeddata never fires
       setTimeout(() => {
         video.removeEventListener("loadeddata", onReady);
         start();
       }, 1200);
     });
+  }
+
+  function goToNextHero() {
+    clearTimeout(heroTimer);
+    showHeroVideo(heroIndex + 1);
   }
 
   function showHeroVideo(index) {
@@ -149,6 +154,8 @@
       const active = i === heroIndex;
       video.classList.toggle("is-active", active);
       video.style.zIndex = active ? "2" : "1";
+      video.loop = false;
+      video.onended = null;
       if (!active) video.pause();
     });
 
@@ -156,12 +163,16 @@
     const next = heroVideos[(heroIndex + 1) % heroVideos.length];
     prepareHeroVideo(next);
 
+    // Play once, then move on — no repeats
+    current.onended = () => goToNextHero();
+
     playHeroVideo(current).finally(() => {
       clearTimeout(heroTimer);
-      const hold = Number(current.dataset.hold) || 5000;
-      heroTimer = setTimeout(() => {
-        showHeroVideo(heroIndex + 1);
-      }, hold);
+      // Safety fallback if "ended" never fires (rare mobile quirks)
+      const durationMs = Number.isFinite(current.duration)
+        ? Math.max(1200, current.duration * 1000 + 400)
+        : 8000;
+      heroTimer = setTimeout(goToNextHero, durationMs);
     });
   }
 
