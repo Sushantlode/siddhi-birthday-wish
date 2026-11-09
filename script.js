@@ -52,9 +52,9 @@
   const gateHeartTimer = setInterval(spawnGateHeart, 450);
 
   const rotatingLines = [
-    "Tap the gift. Your birthday world is waiting.",
-    "Made only for Siddhi Shahane.",
-    "Soft lights. Sweet clips. One big wish.",
+    "Tap the gift — a little birthday smile is waiting for you.",
+    "Made with love, just for Siddhi.",
+    "Cute clips, warm wishes, and lots of hearts.",
   ];
   let lineIndex = 0;
   setInterval(() => {
