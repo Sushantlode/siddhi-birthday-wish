@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=8" />
 </head>
 <body>
   <div class="grain" aria-hidden="true"></div>
@@ -259,7 +259,17 @@
     <!-- Toast -->
     <section class="toast" id="toast">
       <div class="toast__media" aria-hidden="true">
-        <video muted playsinline loop autoplay preload="metadata" poster="media/poster-07.jpg">
+        <video
+          id="toastVideo"
+          class="toast__video"
+          muted
+          autoplay
+          loop
+          playsinline
+          webkit-playsinline
+          preload="auto"
+          poster="media/poster-07.jpg"
+        >
           <source src="media/siddhi-07.mp4" type="video/mp4" />
         </video>
         <div class="toast__veil"></div>
@@ -301,6 +311,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>

@@ -83,6 +83,7 @@
       clearInterval(gateHeartTimer);
       startHero();
       startAutoFilm();
+      setupToastVideo();
       setTimeout(() => gate.remove(), 900);
     }, 420);
   }
@@ -114,6 +115,54 @@
   function startHero() {
     if (!heroVideos.length) return;
     showHeroVideo(0);
+  }
+
+  function unlockVideo(video) {
+    if (!video) return Promise.resolve();
+    video.muted = true;
+    video.defaultMuted = true;
+    video.setAttribute("muted", "");
+    video.setAttribute("playsinline", "");
+    video.setAttribute("webkit-playsinline", "");
+    video.playsInline = true;
+    const playAttempt = video.play();
+    if (playAttempt && typeof playAttempt.then === "function") {
+      return playAttempt.catch(() => {});
+    }
+    return Promise.resolve();
+  }
+
+  function setupToastVideo() {
+    const toastVideo = document.getElementById("toastVideo");
+    const toastSection = document.getElementById("toast");
+    if (!toastVideo || !toastSection) return;
+
+    const tryPlay = () => unlockVideo(toastVideo);
+
+    // Warm up after the first tap (opening the gift)
+    toastVideo.load();
+    tryPlay();
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) tryPlay();
+          else toastVideo.pause();
+        });
+      },
+      { threshold: 0.25 }
+    );
+    io.observe(toastSection);
+
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) tryPlay();
+    });
+
+    const resumeIfNeeded = () => {
+      if (toastVideo.paused) tryPlay();
+    };
+    document.addEventListener("touchstart", resumeIfNeeded, { passive: true });
+    document.addEventListener("click", resumeIfNeeded);
   }
 
   /* ---------- Lightbox ---------- */
